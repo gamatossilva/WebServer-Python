@@ -94,7 +94,13 @@ Pagina para editar um item no menu de um restaurante especifico
 '''
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/edit/', methods = ['GET', 'POST'])
 def editMenuItem(restaurant_id, menu_id):
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
     editedItem = session.query(MenuItem).filter_by(id = menu_id).one()
+    hasItem = False
+    for item in items:
+        if item.id == editedItem.id:
+            hasItem = True
+
     if request.method == 'POST':
         if request.form['name']:
             editedItem.name = request.form['name']
@@ -109,21 +115,26 @@ def editMenuItem(restaurant_id, menu_id):
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
 
     else:
-        return render_template('restaurantEditMenuItem.html', restaurant_id = restaurant_id, menu_id = menu_id, item = editedItem)
+        return render_template('restaurantEditMenuItem.html', restaurant_id = restaurant_id, menu_id = menu_id, item = editedItem, hasItem = hasItem)
 
 '''
 Pagina para deletar um item no menu de um restaurante especifico
 '''
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/delete/', methods = ['GET', 'POST'])
 def deleteMenuItem(restaurant_id, menu_id):
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
     itemToDelete = session.query(MenuItem).filter_by(id = menu_id).one()
+    hasItem = False
+    for item in items:
+        if item.id == itemToDelete.id:
+            hasItem = True
     if request.method == 'POST':
         session.delete(itemToDelete)
         session.commit()
         return redirect(url_for('showMenu', restaurant_id = restaurant_id))
 
     else:
-        return render_template('restaurantDeleteMenuItem.html', restaurant_id = restaurant_id, item = itemToDelete)
+        return render_template('restaurantDeleteMenuItem.html', restaurant_id = restaurant_id, item = itemToDelete, hasItem = hasItem)
 
 @app.route('/restaurants/json/')
 def showRestaurantsJSON():
@@ -138,8 +149,17 @@ def showRestaurantMenuJSON(restaurant_id):
 
 @app.route('/restaurant/<int:restaurant_id>/menu/<int:menu_id>/json/')
 def showRestaurantMenuItemJSON(restaurant_id, menu_id):
+    items = session.query(MenuItem).filter_by(restaurant_id = restaurant_id).all()
     menuItem = session.query(MenuItem).filter_by(id = menu_id).one()
-    return jsonify(RestaurantMenuItem = menuItem.serialize)
+    hasItem = False
+    for item in items:
+        if item.id == menuItem.id:
+            hasItem = True
+
+    if (hasItem == True):
+        return jsonify(RestaurantMenuItem = menuItem.serialize)
+    else:
+        return jsonify(RestaurantMenuItem = [])
 
 '''
 Função para executar o código
